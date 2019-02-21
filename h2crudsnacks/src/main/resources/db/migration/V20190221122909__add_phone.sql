@@ -1,0 +1,2 @@
+ALETER TABLE customer
+ADD PHONE STRING;
