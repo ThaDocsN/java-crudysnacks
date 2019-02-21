@@ -10,7 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = {}, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -25,6 +28,13 @@ public class SnackBarController
     @Autowired
     VendingMachineRepository vendingrepos;
 
+    // GET    /customer - returns all customers *
+    // GET    /customer/id/{id} - returns customer based on id *
+    // GET    /customer/name/{name} - returns customer based on name *
+    // POST   /customer - adds a customer *
+    // PUT    /customer/id/{id} - updates customer based on id *
+    // DELETE /customer/{id} - delete customer based on id
+
 
     @GetMapping("/customer")
     public List<Customer> allcust()
@@ -32,10 +42,70 @@ public class SnackBarController
         return custrepos.findAll();
     }
 
-    @GetMapping("/customer/{name}")
+    @GetMapping("/customer/id/{id}")
+    public Customer findCustId(@PathVariable long id)
+    {
+        var foundCust = custrepos.findById(id);
+        if (foundCust.isPresent())
+        {
+            return foundCust.get();
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    @GetMapping("/customer/name/{name}")
     public Customer findCustomer(@PathVariable String name)
     {
-        return custrepos.findByName(name);
+        var foundCust = custrepos.findByName(name);
+        if (foundCust != null)
+        {
+            return foundCust;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    @PostMapping("/customer")
+    public Customer newCustomer(@RequestBody Customer customer) throws URISyntaxException
+    {
+        return custrepos.save(customer);
+    }
+
+    @PutMapping("/customer/id/{id}")
+    public Customer changeCust(@RequestBody Customer newcust, @PathVariable long id) throws URISyntaxException
+    {
+        Optional<Customer> updateCust = custrepos.findById(id);
+        if (updateCust.isPresent())
+        {
+            newcust.setId(id);
+            custrepos.save(newcust);
+
+            return newcust;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    @DeleteMapping("/customer/id/{id}")
+    public Customer deleteCustomer(@PathVariable long id)
+    {
+        var foundCust = custrepos.findById(id);
+        if (foundCust.isPresent())
+        {
+            custrepos.deleteById(id);
+            return foundCust.get();
+        }
+        else
+        {
+            return null;
+        }
     }
 
     @GetMapping("/snack")
@@ -50,10 +120,30 @@ public class SnackBarController
         return snackrepos.vendingSnacks();
     }
 
+    @DeleteMapping("/snack/{id}")
+    public void deleteSnack(@PathVariable Long id)
+    {
+        snackrepos.deleteById(id);
+    }
+
+    // GET    /vending - returns all vending machines *
+    // GET    /vending/id/{id} - returns vending machine based on id *
+    // GET    /vending/name/{name} - returns vending machine based on name *
+    // POST   /vending - adds a vending machine *
+    // PUT    /vending/id/{} - updates vending machine based on id *
+    // DELETE /vending/{id} - delete vending machine based on id
+    // since vending machine is returning a list of snacks, return value must be list
+
     @GetMapping("/vending")
     public List<VendingMachine> allvending()
     {
         return vendingrepos.findAll();
+    }
+
+    @GetMapping("/vending/id/{id}")
+    public List<VendingMachine> getVendId(@PathVariable long id)
+    {
+        return vendingrepos.findById(id).stream().collect(Collectors.toList());
     }
 
     @GetMapping("/vending/{name}")
@@ -62,17 +152,34 @@ public class SnackBarController
         return vendingrepos.findByName(name);
     }
 
-
-    @DeleteMapping("/vending/{id}")
-    public void deleteVendingMachine(@PathVariable Long id)
+    @PostMapping("/vending")
+    public VendingMachine newVending(@RequestBody VendingMachine vendingMachine) throws URISyntaxException
     {
-        vendingrepos.deleteById(id);
+        return vendingrepos.save(vendingMachine);
     }
 
-
-    @DeleteMapping("/snack/{id}")
-    public void deleteSnack(@PathVariable Long id)
+    @PutMapping("/vending/id/{id}")
+    public List<VendingMachine> changeVending(@RequestBody VendingMachine newVending, @PathVariable long id) throws URISyntaxException
     {
-        snackrepos.deleteById(id);
+        Optional<VendingMachine> updatedVending = vendingrepos.findById(id);
+        if (updatedVending.isPresent())
+        {
+            newVending.setId(id);
+            vendingrepos.save(newVending);
+
+            return java.util.Arrays.asList(newVending);
+        }
+        else
+        {
+            return updatedVending.stream().collect(Collectors.toList());
+        }
+    }
+
+    @DeleteMapping("/vending/{id}")
+    public List<VendingMachine> deleteVendingMachine(@PathVariable long id)
+    {
+        List<VendingMachine> rmvending = vendingrepos.findById(id).stream().collect(Collectors.toList());
+        vendingrepos.deleteById(id);
+        return rmvending;
     }
 }
