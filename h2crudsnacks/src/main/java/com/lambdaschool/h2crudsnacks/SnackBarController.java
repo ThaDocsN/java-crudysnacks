@@ -6,6 +6,7 @@ import com.lambdaschool.h2crudsnacks.models.VendingMachine;
 import com.lambdaschool.h2crudsnacks.repository.CustomerRepository;
 import com.lambdaschool.h2crudsnacks.repository.SnackRepository;
 import com.lambdaschool.h2crudsnacks.repository.VendingMachineRepository;
+import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Api(value = "Crudy SnackBar Application", description = "The classic Snack Bar Application in CRUD")
 @RestController
 @RequestMapping(path = {}, produces = MediaType.APPLICATION_JSON_VALUE)
 public class SnackBarController
@@ -36,14 +38,27 @@ public class SnackBarController
     // DELETE /customer/{id} - delete customer based on id
 
 
+    @ApiOperation(value = "list All customer", response = List.class)
+    @ApiResponses(value =
+            {
+                    @ApiResponse(code = 200, message = "Successfully recetrieve list"),
+                    @ApiResponse(code = 401, message = "You are not authorized to the view the resource"),
+                    @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"),
+                    @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
+            })
+
     @GetMapping("/customer")
     public List<Customer> allcust()
     {
         return custrepos.findAll();
     }
 
+
+
+    @ApiOperation(value = "Customer based off of customer id", response = Customer.class)
     @GetMapping("/customer/id/{id}")
-    public Customer findCustId(@PathVariable long id)
+    public Customer findCustId(
+            @ApiParam(value = "This is the customer you seek", required = true) @PathVariable long id)
     {
         var foundCust = custrepos.findById(id);
         if (foundCust.isPresent())
